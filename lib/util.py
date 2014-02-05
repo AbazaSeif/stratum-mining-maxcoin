@@ -6,6 +6,7 @@ import binascii
 import settings
 import bitcoin_rpc
 from hashlib import sha256
+from sha3 import sha3_256
 
 def deser_string(f):
     nit = struct.unpack("<B", f.read(1))[0]
@@ -179,7 +180,8 @@ def address_to_pubkeyhash(addr):
     
     ver = addr[0]
     cksumA = addr[-4:]
-    cksumB = doublesha(addr[:-4])[:4]
+    #TODO: We should clean this up so that it works with not Keccek implementations too.
+    cksumB = sha3_256(addr[:-4]).digest()[:4]
     
     if cksumA != cksumB:
         return None
