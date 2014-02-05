@@ -12,4 +12,4 @@
 	url = https://github.com/Neisklar/quarkcoin-hash-python
 [submodule "externals/maxcoin-hash"]
 	path = externals/maxcoin-hash
-	url = git@github.com:Prydie/maxcoin-hash-python.git
+	url = https://github.com/Prydie/maxcoin-hash-python
