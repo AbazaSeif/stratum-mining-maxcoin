@@ -10,3 +10,6 @@
 [submodule "externals/quarkcoin-hash"]
 	path = externals/quarkcoin-hash
 	url = https://github.com/Neisklar/quarkcoin-hash-python
+[submodule "externals/maxcoin-hash"]
+	path = externals/maxcoin-hash
+	url = git@github.com:Prydie/maxcoin-hash-python.git
