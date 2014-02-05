@@ -26,6 +26,9 @@ if settings.COINDAEMON_ALGO == 'scrypt':
 elif settings.COINDAEMON_ALGO == 'quark':
     log.debug("########################################### Loading Quark Support #########################################################")
     import quark_hash
+elif settings.COINDAEMON_ALGO == 'max':
+    log.debug("########################################### Loading Max Support #########################################################")
+    import max_hash
 else: 
     log.debug("########################################### Loading SHA256 Support ######################################################")
 
@@ -239,6 +242,8 @@ class CBlock(object):
             self.scrypt = None
         elif settings.COINDAEMON_ALGO == 'quark':
             self.quark = None
+        elif settings.COINDAEMON_ALGO == 'max':
+            self.max = None
         else: pass
         if settings.COINDAEMON_Reward == 'POS':
             self.signature = b""
@@ -294,6 +299,18 @@ class CBlock(object):
                 r.append(struct.pack("<I", self.nNonce))
                 self.quark = uint256_from_str(quark_hash.getPoWHash(''.join(r)))
              return self.quark
+    elif settings.COINDAEMON_ALGO == 'max':
+         def calc_max(self):
+             if self.max is None:
+                r = []
+                r.append(struct.pack("<i", self.nVersion))
+                r.append(ser_uint256(self.hashPrevBlock))
+                r.append(ser_uint256(self.hashMerkleRoot))
+                r.append(struct.pack("<I", self.nTime))
+                r.append(struct.pack("<I", self.nBits))
+                r.append(struct.pack("<I", self.nNonce))
+                self.max = uint256_from_str(max_hash.getPoWHash(''.join(r)))
+             return self.max
     else:
        def calc_sha256(self):
            if self.sha256 is None:
@@ -313,6 +330,8 @@ class CBlock(object):
             self.calc_scrypt()
         elif settings.COINDAEMON_ALGO == 'quark':
             self.calc_quark()
+        elif settings.COINDAEMON_ALGO == 'max':
+            self.calc_max()
         else:
             self.calc_sha256()
 
@@ -323,6 +342,9 @@ class CBlock(object):
                 return False
         elif settings.COINDAEMON_ALGO == 'quark':
             if self.quark > target:
+                return False
+        elif settings.COINDAEMON_ALGO == 'max':
+            if self.max > target:
                 return False
         else:
            if self.sha256 > target:
