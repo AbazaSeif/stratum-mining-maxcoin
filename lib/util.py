@@ -7,6 +7,10 @@ import settings
 import bitcoin_rpc
 from hashlib import sha256
 
+if settings.COINDAEMON_ALGO == 'keccak':
+    import sha3
+
+
 def deser_string(f):
     nit = struct.unpack("<B", f.read(1))[0]
     if nit == 253:
@@ -176,14 +180,15 @@ def address_to_pubkeyhash(addr):
 
     if addr is None:
         return None
-    
+
     ver = addr[0]
     cksumA = addr[-4:]
-    cksumB = doublesha(addr[:-4])[:4]
-    
+    #TODO: We should clean this up so that it works with not Keccek implementations too.
+    cksumB = sha3.sha3_256(addr[:-4]).digest()[:4]
+
     if cksumA != cksumB:
         return None
-    
+
     return (ver, addr[1:-4])
 
 def ser_uint256_be(u):
