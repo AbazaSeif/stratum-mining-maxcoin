@@ -11,6 +11,7 @@ import sys
 import random
 import cStringIO
 from Crypto.Hash import SHA256
+from sha3 import sha3_256
 
 from twisted.internet.protocol import Protocol
 from util import *
@@ -309,7 +310,8 @@ class CBlock(object):
                 r.append(struct.pack("<I", self.nTime))
                 r.append(struct.pack("<I", self.nBits))
                 r.append(struct.pack("<I", self.nNonce))
-                self.max = uint256_from_str(max_hash.getPoWHash(''.join(r)))
+                #self.max = uint256_from_str(max_hash.getPoWHash(''.join(r)))
+                self.max = uint256_from_str(sha3_256(''.join(r)).digest())
              return self.max
     else:
        def calc_sha256(self):

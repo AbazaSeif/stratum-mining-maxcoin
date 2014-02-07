@@ -24,6 +24,8 @@ from mining.interfaces import Interfaces
 from extranonce_counter import ExtranonceCounter
 import lib.settings as settings
 
+from sha3 import sha3_256
+
 
 class JobIdGenerator(object):
     '''Generate pseudo-unique job_id. It does not need to be absolutely unique,
@@ -156,6 +158,10 @@ class TemplateRegistry(object):
             diff1 = 0x0000ffff00000000000000000000000000000000000000000000000000000000
         elif settings.COINDAEMON_ALGO == 'quark':
             diff1 = 0x000000ffff000000000000000000000000000000000000000000000000000000
+        #elif settings.coindaemon_algo == 'max':
+            #diff1 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
+        elif settings.coindaemon_algo == 'max':
+            diff1 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
         else:
             diff1 = 0x00000000ffff0000000000000000000000000000000000000000000000000000
 
@@ -248,6 +254,7 @@ class TemplateRegistry(object):
             hash_bin = quark_hash.getPoWHash(''.join([ header_bin[i*4:i*4+4][::-1] for i in range(0, 20) ]))
         elif settings.COINDAEMON_ALGO == 'max':
             hash_bin = max_hash.getPoWHash(''.join([ header_bin[i*4:i*4+4][::-1] for i in range(0, 20) ]))
+            hash_bin = sha3_256(''.join([ header_bin[i*4:i*4+4][::-1] for i in range(0, 20) ])).digest()[0:33]
 	elif settings.COINDAEMON_ALGO == 'skeinhash':
             hash_bin = skeinhash.skeinhash(''.join([ header_bin[i*4:i*4+4][::-1] for i in range(0, 20) ]))
         else:
@@ -260,11 +267,14 @@ class TemplateRegistry(object):
             header_hex = header_hex+"000000800000000000000000000000000000000000000000000000000000000000000000000000000000000080020000"
         elif settings.COINDAEMON_ALGO == 'quark':
             header_hex = header_hex+"000000800000000000000000000000000000000000000000000000000000000000000000000000000000000080020000"
+        #elif settings.COINDAEMON_ALGO == 'max':
+            #header_hex = header_hex+"000000800000000000000000000000000000000000000000000000000000000000000000000000000000000080020000"
         else: pass
                  
         target_user = self.diff_to_target(difficulty)
         if hash_int > target_user:
-            raise SubmitException("Share is above target")
+            raise SubmitException("Share is above target. Hash: %s",
+                    scrypt_hash_hex)
 
         # Mostly for debugging purposes
         target_info = self.diff_to_target(100000)
@@ -282,7 +292,11 @@ class TemplateRegistry(object):
             # Reverse the header and get the potential block hash (for scrypt only) 
             #if settings.COINDAEMON_ALGO == 'scrypt' or settings.COINDAEMON_ALGO == 'sha256d':
             #   if settings.COINDAEMON_Reward == 'POW':
-            block_hash_bin = util.doublesha(''.join([ header_bin[i*4:i*4+4][::-1] for i in range(0, 20) ]))
+            if settings.COINDAEMON_ALGO == 'max':
+                block_hash_bin = sha3_256(''.join([ header_bin[i*4:i*4+4][::-1]
+                    for i in range(0, 20) ]) + str(int(ntime, 16))).hexdigest()
+            else:
+                block_hash_bin = util.doublesha(''.join([ header_bin[i*4:i*4+4][::-1] for i in range(0, 20) ]))
             block_hash_hex = block_hash_bin[::-1].encode('hex_codec')
             #else:   block_hash_hex = hash_bin[::-1].encode('hex_codec')
             #else:  block_hash_hex = hash_bin[::-1].encode('hex_codec')
@@ -295,7 +309,7 @@ class TemplateRegistry(object):
                             
             # 7. Submit block to the network
             serialized = binascii.hexlify(job.serialize())
-	    on_submit = self.bitcoin_rpc.submitblock(serialized, block_hash_hex, scrypt_hash_hex)
+            on_submit = self.bitcoin_rpc.submitblock(serialized, block_hash_hex, scrypt_hash_hex)
             if on_submit:
                 self.update_block()
 

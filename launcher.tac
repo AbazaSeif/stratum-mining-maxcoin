@@ -3,7 +3,7 @@
 # Add conf directory to python path.
 # Configuration file is standard python module.
 import os, sys
-sys.path = [os.path.join(os.getcwd(), 'conf'),os.path.join(os.getcwd(), 'externals', 'stratum-mining-proxy'),] + sys.path
+sys.path = [os.path.join(os.getcwd(), 'conf'),os.path.join(os.getcwd(), 'externals', 'stratum-mining-proxy'), '/srv/stratum/env/lib/python2.7/site-packages/'] + sys.path
 
 from twisted.internet import defer
 from twisted.application.service import Application, IProcess
